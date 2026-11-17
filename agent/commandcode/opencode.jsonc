@@ -1,0 +1,28 @@
+// CommandCode (OpenCode-compatible) global configuration template.
+// Target path: ~/.opencode/opencode.jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "commandcode/gpt-4o",
+  "skills": {
+    "paths": ["~/.opencode/skills"]
+  },
+  "provider": {
+    "commandcode": {
+      "api": "https://api.commandcode.ai/v1",
+      "name": "CommandCode",
+      "env": ["COMMANDCODE_API_KEY"]
+    }
+  },
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp@latest"],
+      "enabled": true
+    }
+  }
+}

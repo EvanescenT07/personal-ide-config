@@ -1,3 +1,7 @@
+/**
+ * Bottom workbench status strip showing active branch, sync timestamp, latest commit,
+ * active file language, GitHub rate-limit health, and Command Palette shortcut.
+ */
 "use client";
 
 import {
@@ -20,6 +24,7 @@ interface StatusBarProps {
   onOpenPalette: () => void;
 }
 
+/** Renders branch, sync state, file category/language, and API health indicators. */
 export function StatusBar({
   tree,
   selectedFile,

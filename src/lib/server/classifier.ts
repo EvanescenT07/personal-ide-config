@@ -1,14 +1,16 @@
+/**
+ * Deterministic file-tree classifier mapping Git tree blobs into workbench
+ * categories (`ideConfigs`, `aiRules`, `scripts`, `docs`) and Shiki languages.
+ */
 import "server-only";
 
 import type { FileCategory } from "@/lib/types";
 
 const AI_DIRECTORY =
-  /(^|\/)(rules|prompts|agents|agent|skills|cursor|copilot|claude|windsurf)(\/|$)/i;
+  /(^|\/)(rules|prompts|agents|agent|skills|cursor|copilot|claude|windsurf|opencode|commandcode|antigravity)(\/|$)/i;
 
 const AI_FILENAME =
-  /(^|\/)(\.cursorrules|copilot-instructions\.md|CLAUDE\.md|GEMINI\.md|AGENTS\.md|[^/]*rules[^/]*\.md|[^/]*prompt[^/]*\.md)$/i;
-
-const AI_TEXT_EXTENSION = /\.(md|mdx|mdc|txt)$/i;
+  /(^|\/)(\.cursorrules|copilot-instructions\.md|CLAUDE\.md|GEMINI\.md|AGENTS\.md|SKILL\.md|rules\.md|opencode\.jsonc|mcp_config[^/]*\.json|\.skill-lock\.json|[^/]*rules[^/]*\.(md|mdx|mdc|txt)|[^/]*prompt[^/]*\.(md|mdx|mdc|txt))$/i;
 
 const SCRIPT_EXTENSION = /\.(sh|ps1|bat|cmd|zsh)$/i;
 const SCRIPT_FILENAME = /(^|\/)(Makefile|Dockerfile)$/i;
@@ -17,13 +19,13 @@ const DOC_FILENAME =
   /(^|\/)(README|LICENSE|CHANGELOG|CONTRIBUTING|CODE_OF_CONDUCT)(\.[a-z]+)?$/i;
 
 const IDE_FILENAME =
-  /(^|\/)(settings\.json|keybindings\.json|extensions\.json|tasks\.json|launch\.json)$/i;
+  /(^|\/)(\.editorconfig|\.ideavimrc|\.vimrc|\.prettierrc[^/]*|\.eslintrc[^/]*|settings\.json|keybindings\.json|extensions\.json|extensions\.txt|tasks\.json|launch\.json)$/i;
 
 const IDE_DIRECTORY =
-  /(^|\/)(\.vscode|vscode|config|settings|snippets|profiles)(\/|$)/i;
+  /(^|\/)(\.vscode|vscode|ide|config|settings|snippets|profiles)(\/|$)/i;
 
 const IDE_EXTENSION =
-  /\.(json|jsonc|yaml|yml|toml|code-snippets|code-profile)$/i;
+  /\.(json|jsonc|yaml|yml|toml|lua|vim|ideavimrc|editorconfig|code-snippets|code-profile)$/i;
 
 const TEXT_DOC_EXTENSION = /\.(md|mdx|txt|pbtxt)$/i;
 
@@ -56,6 +58,8 @@ const IGNORED_FILES = new Set([
   "postcss.config.mjs",
   "postcss.config.js",
   ".gitignore",
+  ".DS_Store",
+  "Thumbs.db",
   ".env",
   ".env.local",
   ".env.example",
@@ -77,13 +81,19 @@ const LANGUAGE_BY_EXTENSION: Record<string, string> = {
   yaml: "yaml",
   yml: "yaml",
   toml: "toml",
+  lua: "lua",
   sh: "shellscript",
+  bash: "shellscript",
   zsh: "shellscript",
   ps1: "powershell",
   bat: "bat",
   cmd: "bat",
   cfg: "ini",
   ini: "ini",
+  editorconfig: "ini",
+  ideavimrc: "viml",
+  vimrc: "viml",
+  vim: "viml",
   pbtxt: "ini",
   txt: "text",
 };
@@ -106,6 +116,7 @@ export interface ClassifiedFile {
   language: string;
 }
 
+/** Filters out web-app internals, lockfiles, env files, and binary assets from the Git tree. */
 export function shouldIgnore(path: string): boolean {
   const normalized = path.replace(/\\/g, "/");
   if (!normalized || normalized.endsWith("/")) {
@@ -116,7 +127,8 @@ export function shouldIgnore(path: string): boolean {
     return true;
   }
 
-  if (IGNORED_FILES.has(normalized)) {
+  const filename = normalized.split("/").pop() ?? normalized;
+  if (IGNORED_FILES.has(normalized) || filename === ".DS_Store" || filename === "Thumbs.db") {
     return true;
   }
 
@@ -129,36 +141,40 @@ function extensionOf(path: string): string {
   return dotIndex > 0 ? filename.slice(dotIndex + 1).toLowerCase() : "";
 }
 
-export function classifyPath(path: string, size = 0): FileCategory {
-  const filename = path.split("/").pop() ?? path;
-  const extension = extensionOf(path);
-  const isText = AI_TEXT_EXTENSION.test(filename);
+/**
+ * Classifies a repository path into a workbench category.
+ * Documentation rules (`PRD*`, `README`, `docs/`) execute before AI/IDE directory checks
+ * so directory READMEs never pollute `aiRules` or `ideConfigs`.
+ */
+export function classifyPath(path: string, _size = 0): FileCategory {
+  const normalized = path.replace(/\\/g, "/");
+  const filename = normalized.split("/").pop() ?? normalized;
 
-  if (/^PRD[\s._-]/i.test(filename)) {
+  if (/^PRD[\s._-]/i.test(filename) || DOC_FILENAME.test(filename) || /^docs\//i.test(normalized)) {
     return "docs";
   }
 
-  if ((AI_DIRECTORY.test(path) && isText) || AI_FILENAME.test(filename)) {
-    return "aiRules";
-  }
-
-  if (SCRIPT_EXTENSION.test(filename) || SCRIPT_FILENAME.test(filename)) {
+  if (
+    SCRIPT_EXTENSION.test(filename) ||
+    SCRIPT_FILENAME.test(filename) ||
+    /^scripts\//i.test(normalized)
+  ) {
     return "scripts";
   }
 
-  if (DOC_FILENAME.test(filename)) {
-    return "docs";
-  }
-
-  if (IDE_FILENAME.test(filename) || IDE_EXTENSION.test(filename)) {
+  if (/^ide\//i.test(normalized) || IDE_FILENAME.test(filename)) {
     return "ideConfigs";
   }
 
-  if (IDE_DIRECTORY.test(path)) {
-    return "ideConfigs";
+  if (/^agent\//i.test(normalized) || AI_DIRECTORY.test(normalized) || AI_FILENAME.test(filename)) {
+    return "aiRules";
   }
 
-  if (EXTENSION_LIST.test(filename) && /\.txt$/i.test(filename)) {
+  if (
+    IDE_DIRECTORY.test(normalized) ||
+    IDE_EXTENSION.test(filename) ||
+    (EXTENSION_LIST.test(filename) && /\.txt$/i.test(filename))
+  ) {
     return "ideConfigs";
   }
 
@@ -169,6 +185,7 @@ export function classifyPath(path: string, size = 0): FileCategory {
   return "docs";
 }
 
+/** Converts a Git tree blob entry into structured UI metadata, or returns null if ignored. */
 export function classifyBlob(blob: GitHubTreeBlob): ClassifiedFile | null {
   if (blob.type !== "blob" || shouldIgnore(blob.path)) {
     return null;
@@ -177,6 +194,8 @@ export function classifyBlob(blob: GitHubTreeBlob): ClassifiedFile | null {
   const category = classifyPath(blob.path, blob.size ?? 0);
   const extension = extensionOf(blob.path);
   const name = blob.path.split("/").pop() ?? blob.path;
+  const isJson = extension === "json" || extension === "jsonc";
+  const isMarkdown = extension === "md" || extension === "mdx" || extension === "mdc";
 
   return {
     path: blob.path,
@@ -184,17 +203,58 @@ export function classifyBlob(blob: GitHubTreeBlob): ClassifiedFile | null {
     extension,
     size: blob.size ?? 0,
     category,
-    isJson: extension === "json" || extension === "jsonc",
-    isMarkdown: extension === "md" || extension === "mdx" || extension === "mdc",
-    isAiRule: category === "aiRules",
+    isJson,
+    isMarkdown,
+    isAiRule: isAiRulePath(blob.path),
     language: languageFor(blob.path),
   };
 }
 
+/** Resolves a Shiki-compatible language identifier for extensions and leading-dot config files. */
 export function languageFor(path: string): string {
-  return LANGUAGE_BY_EXTENSION[extensionOf(path)] ?? "text";
+  const normalized = path.replace(/\\/g, "/");
+  const filename = (normalized.split("/").pop() ?? normalized).toLowerCase();
+  const ext = extensionOf(normalized);
+
+  if (ext && LANGUAGE_BY_EXTENSION[ext]) {
+    return LANGUAGE_BY_EXTENSION[ext];
+  }
+
+  if (filename.startsWith(".")) {
+    const dotKey = filename.slice(1);
+    if (LANGUAGE_BY_EXTENSION[dotKey]) {
+      return LANGUAGE_BY_EXTENSION[dotKey];
+    }
+    if (dotKey === "cursorrules") {
+      return "markdown";
+    }
+  }
+
+  if (filename === "dockerfile" || filename === "makefile") {
+    return "shellscript";
+  }
+
+  return "text";
 }
 
+/**
+ * Returns true only for prompt-combinable text/Markdown AI rules and skills,
+ * excluding structured JSON/JSONC agent configs so the prompt combiner never mixes JSON into prompts.
+ */
 export function isAiRulePath(path: string): boolean {
-  return classifyPath(path) === "aiRules";
+  if (classifyPath(path) !== "aiRules") {
+    return false;
+  }
+
+  const normalized = path.replace(/\\/g, "/");
+  const filename = normalized.split("/").pop() ?? normalized;
+  const ext = extensionOf(normalized);
+
+  return (
+    ext === "md" ||
+    ext === "mdx" ||
+    ext === "mdc" ||
+    ext === "txt" ||
+    /^\.cursorrules$/i.test(filename)
+  );
 }

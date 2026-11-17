@@ -1,3 +1,7 @@
+/**
+ * Server-side unified Git patch parser built on `parse-diff` to produce structured
+ * hunks with exact old/new line numbers for unified and split diff rendering.
+ */
 import "server-only";
 
 import parseDiff from "parse-diff";
@@ -22,6 +26,7 @@ function stripMarker(content: string): string {
   return content;
 }
 
+/** Parses a concatenated unified diff string into per-file hunks and line records. */
 export function parseUnifiedDiff(raw: string): DiffFile[] {
   if (!raw.trim()) {
     return [];

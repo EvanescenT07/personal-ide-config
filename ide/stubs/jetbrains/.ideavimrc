@@ -1,0 +1,40 @@
+" JetBrains IdeaVim parity configuration.
+" Deploy to ~/.ideavimrc (macOS/Linux) or %USERPROFILE%\.ideavimrc (Windows).
+
+let mapleader=" "
+
+set incsearch
+set hlsearch
+set ignorecase
+set smartcase
+set scrolloff=5
+set relativenumber
+set number
+set clipboard+=unnamedplus
+
+" Emulated Vim plugins bundled with IdeaVim
+set surround
+set commentary
+set nerdtree
+set highlightedyank
+
+" Clear search highlight
+nnoremap <Esc> :nohlsearch<CR>
+
+" Parity mappings to JetBrains IDE actions
+nmap <leader>ff <Action>(GotoFile)
+nmap <leader>fg <Action>(FindInPath)
+nmap <leader>fb <Action>(Switcher)
+nmap <leader>f <Action>(ReformatCode)
+nmap <leader>o <Action>(OptimizeImports)
+nmap <leader>ca <Action>(ShowIntentionActions)
+nmap <leader>rn <Action>(RenameElement)
+nmap <leader>e <Action>(ShowErrorDescription)
+nmap <leader>g <Action>(ActivateVersionControlToolWindow)
+nmap <leader>t <Action>(ActivateTerminalToolWindow)
+
+" Diagnostic and hunk navigation
+nmap ]d <Action>(GotoNextError)
+nmap [d <Action>(GotoPreviousError)
+nmap ]c <Action>(VcsShowNextChangeMarker)
+nmap [c <Action>(VcsShowPrevChangeMarker)

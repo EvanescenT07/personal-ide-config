@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "description": "Structured catalog of lockfile skills, global standalone skills, repository skills, and Antigravity Marketplace plugins.",
+  "skillsDirectory": "${HOME}/.agents/skills",
+  "antigravityPlugins": [
+    {
+      "name": "android-cli-plugin",
+      "marketplaceId": "antigravity-plugins-official/plugin/android-cli-plugin",
+      "marketplace": "antigravity-plugins-official",
+      "installMethod": "Antigravity Plugins Manager UI",
+      "purpose": "Android CLI tooling and project workflows"
+    },
+    {
+      "name": "antislop",
+      "installMethod": "Antigravity Plugins Manager UI",
+      "purpose": "Anti-slop code, UI, and prose quality enforcement"
+    },
+    {
+      "name": "coderabbit",
+      "installMethod": "Antigravity Plugins Manager UI",
+      "purpose": "Automated CodeRabbit review CLI and PR feedback workflows"
+    },
+    {
+      "name": "firebase",
+      "installMethod": "Antigravity Plugins Manager UI",
+      "purpose": "Firebase CLI, auth, and backend integration workflows"
+    },
+    {
+      "name": "google-antigravity-sdk",
+      "installMethod": "Antigravity Plugins Manager UI",
+      "purpose": "Google Antigravity SDK integration and plugin tooling"
+    }
+  ],
+  "lockfileSkills": [
+    {
+      "name": "find-skills",
+      "source": "vercel-labs/skills",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "installCommand": "npx skills add vercel-labs/skills --skill find-skills -g -y"
+    },
+    {
+      "name": "pptx",
+      "source": "anthropics/skills",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/pptx/SKILL.md",
+      "pluginName": "document-skills",
+      "installCommand": "npx skills add anthropics/skills --skill pptx -g -y"
+    },
+    {
+      "name": "pdf",
+      "source": "anthropics/skills",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/pdf/SKILL.md",
+      "pluginName": "document-skills",
+      "installCommand": "npx skills add anthropics/skills --skill pdf -g -y"
+    },
+    {
+      "name": "webapp-testing",
+      "source": "anthropics/skills",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/webapp-testing/SKILL.md",
+      "pluginName": "example-skills",
+      "installCommand": "npx skills add anthropics/skills --skill webapp-testing -g -y"
+    },
+    {
+      "name": "xlsx",
+      "source": "anthropics/skills",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/xlsx/SKILL.md",
+      "pluginName": "document-skills",
+      "installCommand": "npx skills add anthropics/skills --skill xlsx -g -y"
+    },
+    {
+      "name": "android-native-dev",
+      "source": "MiniMax-AI/skills",
+      "sourceUrl": "https://github.com/MiniMax-AI/skills.git",
+      "skillPath": "skills/android-native-dev/SKILL.md",
+      "installCommand": "npx skills add MiniMax-AI/skills --skill android-native-dev -g -y"
+    },
+    {
+      "name": "firebase-auth-basics",
+      "source": "firebase/skills",
+      "sourceUrl": "https://github.com/firebase/skills.git",
+      "skillPath": "skills/firebase-auth-basics/SKILL.md",
+      "installCommand": "npx skills add firebase/skills --skill firebase-auth-basics -g -y"
+    },
+    {
+      "name": "flutter-build-responsive-layout",
+      "source": "flutter/skills",
+      "sourceUrl": "https://github.com/flutter/skills.git",
+      "skillPath": "skills/flutter-build-responsive-layout/SKILL.md",
+      "installCommand": "npx skills add flutter/skills --skill flutter-build-responsive-layout -g -y"
+    },
+    {
+      "name": "flutter-implement-json-serialization",
+      "source": "flutter/skills",
+      "sourceUrl": "https://github.com/flutter/skills.git",
+      "skillPath": "skills/flutter-implement-json-serialization/SKILL.md",
+      "installCommand": "npx skills add flutter/skills --skill flutter-implement-json-serialization -g -y"
+    },
+    {
+      "name": "flutter-use-http-package",
+      "source": "flutter/skills",
+      "sourceUrl": "https://github.com/flutter/skills.git",
+      "skillPath": "skills/flutter-use-http-package/SKILL.md",
+      "installCommand": "npx skills add flutter/skills --skill flutter-use-http-package -g -y"
+    },
+    {
+      "name": "flutter-setup-declarative-routing",
+      "source": "flutter/skills",
+      "sourceUrl": "https://github.com/flutter/skills.git",
+      "skillPath": "skills/flutter-setup-declarative-routing/SKILL.md",
+      "installCommand": "npx skills add flutter/skills --skill flutter-setup-declarative-routing -g -y"
+    },
+    {
+      "name": "flutter-apply-architecture-best-practices",
+      "source": "flutter/skills",
+      "sourceUrl": "https://github.com/flutter/skills.git",
+      "skillPath": "skills/flutter-apply-architecture-best-practices/SKILL.md",
+      "installCommand": "npx skills add flutter/skills --skill flutter-apply-architecture-best-practices -g -y"
+    },
+    {
+      "name": "flutter-fix-layout-issues",
+      "source": "flutter/skills",
+      "sourceUrl": "https://github.com/flutter/skills.git",
+      "skillPath": "skills/flutter-fix-layout-issues/SKILL.md",
+      "installCommand": "npx skills add flutter/skills --skill flutter-fix-layout-issues -g -y"
+    },
+    {
+      "name": "auth0",
+      "source": "auth0/agent-skills",
+      "sourceUrl": "https://github.com/auth0/agent-skills.git",
+      "skillPath": "plugins/auth0/skills/auth0/SKILL.md",
+      "installCommand": "npx skills add auth0/agent-skills --skill auth0 -g -y"
+    },
+    {
+      "name": "figma-design-to-code",
+      "source": "figma/mcp-server-guide",
+      "sourceUrl": "https://github.com/figma/mcp-server-guide.git",
+      "skillPath": "skills/figma-design-to-code/SKILL.md",
+      "installCommand": "npx skills add figma/mcp-server-guide --skill figma-design-to-code -g -y"
+    }
+  ],
+  "globalSkills": [
+    {
+      "name": "caveman",
+      "targetPath": "${HOME}/.gemini/config/skills/caveman/SKILL.md",
+      "source": "Local global skill",
+      "purpose": "Terse caveman response mode supporting lite, full, ultra, and wenyan variants"
+    },
+    {
+      "name": "flutter-animating-apps",
+      "targetPath": "${HOME}/.gemini/config/skills/flutter-animating-apps/SKILL.md",
+      "source": "Local global skill",
+      "purpose": "Flutter implicit/explicit animations, Hero transitions, springs, and staggered motion"
+    },
+    {
+      "name": "graphify",
+      "targetPath": "${HOME}/.gemini/config/skills/graphify/SKILL.md",
+      "source": "graphifyy (uv / PyPI)",
+      "installCommand": "uv tool install graphifyy",
+      "purpose": "Codebase knowledge graph generation and AST dependency querying"
+    },
+    {
+      "name": "reels-storyboard-architect",
+      "targetPath": "${HOME}/.agents/skills/reels-storyboard-architect/SKILL.md",
+      "source": "Local global skill",
+      "purpose": "Modular storyboard.json and 2.5D/3D scene bundle generator for Python Reels Engine"
+    },
+    {
+      "name": "reverse-engineer-anything",
+      "targetPath": "${HOME}/.agents/skills/reverse-engineer-anything/SKILL.md",
+      "source": "rea-agents@6.8.0 (npm)",
+      "installCommand": "npx -y rea-agents@6.8.0",
+      "purpose": "Reverse-engineering workflows paired with the rea MCP server"
+    }
+  ],
+  "repoSkills": [
+    {
+      "name": "ide-config-adapter",
+      "repoPath": "agent/skills/ide-config-adapter/SKILL.md",
+      "purpose": "Detects host OS, IDEs, and SDK roots to safely adapt and merge ide/ and agent/ templates"
+    }
+  ]
+}

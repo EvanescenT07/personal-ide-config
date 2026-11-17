@@ -1,3 +1,7 @@
+/**
+ * Primary file inspection pane supporting raw Shiki code, JSONC Key Explorer,
+ * rendered Markdown, strict JSON comment-stripping copy, and multi-IDE extension CLI synthesis.
+ */
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -25,6 +29,9 @@ import { cn } from "@/lib/utils/cn";
 import { formatBytes, formatNumber } from "@/lib/utils/format";
 
 type ViewMode = "raw" | "explorer" | "rendered";
+
+const CLI_BINARIES = ["code", "agy", "cursor", "windsurf", "codium"] as const;
+type IdeCliBinary = (typeof CLI_BINARIES)[number];
 
 interface FileViewerProps {
   file: FilePayload | null;
@@ -89,6 +96,7 @@ function LoadingState() {
   );
 }
 
+/** Displays a selected repository file with format-specific views, copy modes, and history access. */
 export function FileViewer({
   file,
   meta,
@@ -101,6 +109,7 @@ export function FileViewer({
 }: FileViewerProps) {
   const [mode, setMode] = useState<ViewMode>("raw");
   const [copyMenuOpen, setCopyMenuOpen] = useState(false);
+  const [cliBinary, setCliBinary] = useState<IdeCliBinary>("code");
   const menuRef = useRef<HTMLDivElement>(null);
 
   const filePath = file?.path ?? meta?.path ?? "";
@@ -148,8 +157,8 @@ export function FileViewer({
           </div>
           <p className="text-[14px] font-medium text-ink">Select a file to inspect</p>
           <p className="mt-1 text-[12px] leading-5 text-muted">
-            Pick an IDE config or AI rule from the explorer, or press Ctrl/Cmd + K
-            to search everything.
+            Pick an IDE config, AI agent rule, or script from the explorer, or press
+            Ctrl/Cmd + K to search across files and keys.
           </p>
         </div>
       </div>
@@ -159,14 +168,21 @@ export function FileViewer({
   const isMarkdown = file?.language === "markdown";
   const isJson = Boolean(file && /\.(json|jsonc)$/i.test(file.path));
   const copyLabel = file
-    ? file.path.includes("extensions")
+    ? file.extensionCli
       ? "Copy Extension List"
       : meta?.category === "aiRules"
-        ? "Copy Rule"
+        ? meta.isAiRule
+          ? "Copy Rule"
+          : "Copy Config"
         : meta?.category === "ideConfigs"
           ? "Copy Config"
-          : "Copy File"
+          : meta?.category === "scripts"
+            ? "Copy Script"
+            : "Copy File"
     : "Copy File";
+  const resolvedCli = file?.extensionCli
+    ? file.extensionCli.replace(/^code\b/, cliBinary)
+    : null;
   const lineCount = file ? file.raw.split(/\r?\n/).length : 0;
   const segments = filePath.split("/").filter(Boolean);
 
@@ -322,7 +338,7 @@ export function FileViewer({
                     active={mode === "raw"}
                     onClick={() => setMode("raw")}
                     Icon={Code2}
-                    label="Raw Prompt"
+                    label={meta?.isAiRule ? "Raw Prompt" : "Raw Markdown"}
                   />
                 </>
               ) : (
@@ -335,7 +351,7 @@ export function FileViewer({
               )}
             </div>
 
-            {file?.extensionCli ? (
+            {resolvedCli ? (
               <span className="rounded-full border border-add/30 bg-add/10 px-2 py-1 text-[9.5px] font-medium uppercase tracking-wide text-add">
                 Extension list detected
               </span>
@@ -369,24 +385,52 @@ export function FileViewer({
 
         {file && !loading && !error ? (
           <>
-            {file.extensionCli ? (
+            {resolvedCli ? (
               <div className="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-6">
                 <div className="rounded-lg border border-add/25 bg-[linear-gradient(120deg,rgba(10,30,21,0.9),rgba(11,18,26,0.9))] p-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7edca9]">
-                        Quick install
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7edca9]">
+                          Quick install
+                        </p>
+                        <div
+                          className="flex flex-wrap items-center gap-1"
+                          role="group"
+                          aria-label="Target IDE CLI binary"
+                        >
+                          {CLI_BINARIES.map((binary) => (
+                            <button
+                              key={binary}
+                              type="button"
+                              onClick={() => setCliBinary(binary)}
+                              aria-pressed={cliBinary === binary}
+                              className={cn(
+                                "rounded border px-1.5 py-0.5 font-mono text-[9.5px] transition",
+                                cliBinary === binary
+                                  ? "border-add/50 bg-add/20 text-[#d7f5e4]"
+                                  : "border-edge bg-canvas/60 text-muted hover:text-ink",
+                              )}
+                            >
+                              {binary}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="mt-1.5 break-all font-mono text-[11px] leading-5 text-[#c6e9d6]">
+                        {resolvedCli.length > 140
+                          ? `${resolvedCli.slice(0, 137)}...`
+                          : resolvedCli}
                       </p>
-                      <p className="mt-1 font-mono text-[11px] leading-5 text-[#c6e9d6]">
-                        {file.extensionCli.length > 140
-                          ? `${file.extensionCli.slice(0, 137)}...`
-                          : file.extensionCli}
+                      <p className="mt-1 text-[10px] text-[#83b89a]">
+                        Compatible with VS Code (code), Antigravity (agy), Cursor,
+                        Windsurf, and VSCodium, or run scripts/install-extensions.*.
                       </p>
                     </div>
                     <CopyButton
                       label="Copy CLI command"
-                      text={file.extensionCli}
-                      toastTitle="Extension install command copied"
+                      text={resolvedCli}
+                      toastTitle={`${cliBinary} extension install command copied`}
                       variant="subtle"
                       size="sm"
                     />

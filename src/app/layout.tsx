@@ -5,24 +5,26 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "VSCode Config & AI Rules Hub",
-    template: "%s | VSCode Config Hub",
+    default: "IDE Config & AI Agent Hub",
+    template: "%s | IDE Config Hub",
   },
   description:
-    "A fast workbench for VS Code settings, AI agent rules, and commit history from EvanescenT07/vscode-config.",
-  applicationName: "VSCode Config & AI Rules Hub",
+    "Workbench hub for global IDE configurations, AI agent rules, skills, and repository history.",
+  applicationName: "IDE Config & AI Agent Hub",
   authors: [{ name: "EvanescenT07" }],
   keywords: [
-    "VS Code",
+    "IDE config",
     "settings.json",
+    "editorconfig",
     "AI agent rules",
+    "AGENTS.md",
+    "MCP",
     "developer tooling",
-    "config hub",
   ],
   openGraph: {
-    title: "VSCode Config & AI Rules Hub",
+    title: "IDE Config & AI Agent Hub",
     description:
-      "Browse IDE configs, compose AI rule bundles, and inspect config history in one VS Code-inspired workbench.",
+      "Browse cross-IDE configs, compose AI agent rule bundles, and inspect repository history in one unified workbench.",
     type: "website",
   },
 };

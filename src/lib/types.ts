@@ -1,5 +1,11 @@
+/**
+ * Shared domain types for repository tree classification, file payloads,
+ * commit/diff inspection, and search indexing across server and client layers.
+ */
+
 export type FileCategory = "ideConfigs" | "aiRules" | "scripts" | "docs";
 
+/** Metadata for a classified repository blob; `isAiRule` flags prompt-combinable text/Markdown rules. */
 export interface RepoFile {
   path: string;
   name: string;
@@ -126,7 +132,7 @@ export interface SearchIndex {
 
 export const CATEGORY_LABELS: Record<FileCategory, string> = {
   ideConfigs: "IDE Configs",
-  aiRules: "AI Agent Rules",
+  aiRules: "AI Agents & Rules",
   scripts: "Scripts & Automation",
   docs: "Documentation",
 };

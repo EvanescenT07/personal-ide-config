@@ -1,3 +1,7 @@
+/**
+ * Server-side parsing utilities for JSONC key extraction, comment stripping,
+ * Markdown heading indexing, token estimation, and extension install CLI synthesis.
+ */
 import "server-only";
 
 import { getNodeValue, parse, parseTree } from "jsonc-parser";
@@ -27,6 +31,7 @@ function preview(value: unknown): string {
   return serialized.length > 140 ? `${serialized.slice(0, 137)}...` : serialized;
 }
 
+/** Flattens a JSON or JSONC document into searchable dotted-key entries while preserving comments tolerance. */
 export function extractJsonEntries(raw: string): JsonEntry[] {
   const errors: import("jsonc-parser").ParseError[] = [];
   const root = parseTree(raw, errors, {
@@ -83,6 +88,7 @@ export function extractJsonEntries(raw: string): JsonEntry[] {
   return entries;
 }
 
+/** Converts JSONC (with comments and trailing commas) into strict formatted JSON, or null if unparseable. */
 export function stripJsonComments(raw: string): string | null {
   const errors: import("jsonc-parser").ParseError[] = [];
   const value = parse(raw, errors, {
@@ -97,6 +103,7 @@ export function stripJsonComments(raw: string): string | null {
   return JSON.stringify(value, null, 2);
 }
 
+/** Extracts ATX Markdown headings and deduplicated anchor slugs for the search index. */
 export function extractMarkdownHeadings(raw: string): MarkdownHeading[] {
   const headings: MarkdownHeading[] = [];
   const lines = raw.split(/\r?\n/);
@@ -135,11 +142,12 @@ export function extractMarkdownHeadings(raw: string): MarkdownHeading[] {
   return headings;
 }
 
+/** Approximates LLM token count using the standard 4-characters-per-token heuristic. */
 export function estimateTokens(raw: string): number {
   return Math.max(1, Math.ceil(raw.length / 4));
 }
 
-const EXTENSION_ID = /^[a-z0-9][a-z0-9-]*\.[a-z0-9][a-z0-9-]*$/i;
+const EXTENSION_ID = /^[a-z0-9][a-z0-9_-]*\.[a-z0-9][a-z0-9_-]*$/i;
 
 function collectFromValue(value: unknown, target: Set<string>): void {
   if (typeof value === "string") {
@@ -163,12 +171,17 @@ function collectFromValue(value: unknown, target: Set<string>): void {
   }
 }
 
+/**
+ * Generates an install CLI command from extension list files (`ide/extensions.txt`,
+ * `ide/extensions.json`, or legacy extension manifests), stripping `#` and inline comments.
+ * Uses `code` as the canonical binary prefix; compatible with `code`, `agy`, `cursor`, `windsurf`, and `codium`.
+ */
 export function buildExtensionInstallCommand(
   path: string,
   raw: string,
   isJson: boolean,
 ): string | null {
-  if (!/extensions?/i.test(path)) {
+  if (!/extensions?/i.test(path) || (!isJson && !/\.(txt|list)$/i.test(path))) {
     return null;
   }
 
@@ -182,8 +195,9 @@ export function buildExtensionInstallCommand(
     collectFromValue(value, ids);
   } else {
     for (const line of raw.split(/\r?\n/)) {
-      const candidate = line.trim().replace(/^[-*+]\s+/, "");
-      if (candidate && !candidate.startsWith("#") && EXTENSION_ID.test(candidate)) {
+      const withoutComment = line.replace(/#.*$/, "").trim();
+      const candidate = withoutComment.replace(/^[-*+]\s+/, "").trim();
+      if (candidate && EXTENSION_ID.test(candidate)) {
         ids.add(candidate);
       }
     }

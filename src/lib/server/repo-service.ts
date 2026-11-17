@@ -1,3 +1,7 @@
+/**
+ * Orchestration layer uniting GitHub fetches, path validation, file classification,
+ * Shiki highlighting, JSONC parsing, diff normalization, and command-palette indexing.
+ */
 import "server-only";
 
 import {
@@ -13,6 +17,7 @@ import {
 } from "@/lib/server/github-client";
 import {
   classifyBlob,
+  isAiRulePath,
   languageFor,
 } from "@/lib/server/classifier";
 import {
@@ -40,6 +45,7 @@ import type {
   GitHubCommitFile,
 } from "@/lib/server/github-client";
 
+/** Raised when caller-supplied repository paths or Git refs fail validation. */
 export class RequestValidationError extends Error {
   readonly status: number;
 
@@ -152,6 +158,7 @@ function normalizeCommitDetail(item: GitHubCommitDetailResponse): CommitDetail {
   };
 }
 
+/** Fetches the recursive repository tree and classifies every non-ignored blob into workbench categories. */
 export async function getRepoTree(): Promise<RepoTree> {
   const { owner, repo } = getRepoCoordinates();
   const branch = await getDefaultBranch();
@@ -183,6 +190,7 @@ export async function getRepoTree(): Promise<RepoTree> {
   };
 }
 
+// Verifies the path belongs to the target tree or commit to prevent arbitrary raw URL fetches.
 async function assertPathAccessible(path: string, ref: string): Promise<void> {
   if (isCommitSha(ref)) {
     const detail = await getCommitDetails(ref);
@@ -212,6 +220,7 @@ async function resolveRef(ref: string | null): Promise<string> {
   return ref ?? (await getDefaultBranch());
 }
 
+/** Retrieves unparsed raw text for a validated path at a branch or historical commit SHA. */
 export async function getRawFileContent(
   requestedPath: string,
   requestedRef?: string | null,
@@ -225,6 +234,7 @@ export async function getRawFileContent(
   return { path, ref, raw };
 }
 
+/** Fetches a file and enriches it with Shiki HTML, JSONC entries, Markdown headings, and CLI install snippets. */
 export async function getFilePayload(
   requestedPath: string,
   requestedRef?: string | null,
@@ -237,8 +247,7 @@ export async function getFilePayload(
   const language = languageFor(path);
   const isJson = /\.(json|jsonc)$/i.test(path);
   const isMarkdown = /\.(md|mdx|mdc)$/i.test(path);
-  const isAiRuleCandidate =
-    isMarkdown || /\.(txt|mdc)$/i.test(path) || /(^|\/)(rules|prompts|agents|skills)\//i.test(path);
+  const isPromptRule = isAiRulePath(path);
 
   const [highlightedHtml] = await Promise.all([highlightCode(raw, language)]);
 
@@ -250,13 +259,14 @@ export async function getFilePayload(
     highlightedHtml,
     strippedJson: isJson ? stripJsonComments(raw) : null,
     jsonEntries: isJson ? extractJsonEntries(raw) : [],
-    tokenEstimate: isAiRuleCandidate || isMarkdown ? estimateTokens(raw) : null,
+    tokenEstimate: isPromptRule || isMarkdown ? estimateTokens(raw) : null,
     headings: isMarkdown ? extractMarkdownHeadings(raw) : [],
     extensionCli: buildExtensionInstallCommand(path, raw, isJson),
     size: Buffer.byteLength(raw, "utf8"),
   };
 }
 
+/** Returns paginated commit summaries globally or scoped to a single file path. */
 export async function getCommitList(options: {
   path?: string | null;
   page?: number;
@@ -275,6 +285,7 @@ export async function getCommitList(options: {
   };
 }
 
+/** Fetches and parses a single commit's unified patches into structured hunks. */
 export async function getCommitDetail(sha: string): Promise<CommitDetail> {
   if (!isCommitSha(sha)) {
     throw new RequestValidationError("Invalid commit SHA.");
@@ -306,12 +317,13 @@ async function mapWithConcurrency<T, R>(
   return results;
 }
 
+/** Builds a bounded search index of JSON keys, Markdown headings, and rule token counts for the command palette. */
 export async function getSearchIndex(): Promise<SearchIndex> {
   const tree = await getRepoTree();
   const candidates = tree.files
     .filter(
       (file) =>
-        (file.isJson || file.isMarkdown || file.category === "aiRules") &&
+        (file.isJson || file.isMarkdown || file.isAiRule) &&
         file.size <= 250_000,
     )
     .slice(0, 80);
@@ -346,7 +358,7 @@ export async function getSearchIndex(): Promise<SearchIndex> {
         }
       }
 
-      if (file.category === "aiRules" || file.isMarkdown) {
+      if (file.isAiRule || file.isMarkdown) {
         tokenEstimates[file.path] = estimateTokens(raw);
       }
     } catch (error) {

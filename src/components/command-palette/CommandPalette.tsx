@@ -1,3 +1,7 @@
+/**
+ * Keyboard-first Ctrl/Cmd+K modal indexing repository actions, file paths,
+ * flattened JSONC keys, and Markdown section headings on demand.
+ */
 "use client";
 
 import {
@@ -56,7 +60,7 @@ interface PaletteItem {
   run: () => void;
 }
 
-const GROUP_ORDER = ["Actions", "Files", "JSON keys", "Rule sections"];
+const GROUP_ORDER = ["Actions", "Files", "JSON keys", "Markdown sections"];
 
 function matchScore(value: string, query: string): number {
   if (!query) {
@@ -82,6 +86,7 @@ function matchScore(value: string, query: string): number {
   return 0;
 }
 
+/** Renders the fuzzy search dialog across workbench actions, files, JSON keys, and headings. */
 export function CommandPalette({
   open,
   tree,
@@ -183,7 +188,7 @@ export function CommandPalette({
       id: "action-rules",
       group: "Actions",
       title: "Compose AI rule bundle",
-      subtitle: "Open the multi-rule prompt builder",
+      subtitle: "Open the AI agent rules and prompt builder",
       icon: <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />,
       run: () => onSetView("rules"),
     });
@@ -256,7 +261,11 @@ export function CommandPalette({
         group: "Files",
         title: file.name,
         subtitle: file.path,
-        badge: file.category === "aiRules" ? "rule" : file.extension,
+        badge: file.isAiRule
+          ? "rule"
+          : file.category === "aiRules" && file.isJson
+            ? "agent"
+            : file.extension || file.language,
         icon: <FileCode2 className="h-3.5 w-3.5" aria-hidden="true" />,
         run: () => onSelectFile(file.path),
       }));
@@ -324,7 +333,7 @@ export function CommandPalette({
       .slice(0, 7)
       .map(({ entry }) => ({
         id: `heading-${entry.path}-${entry.slug}`,
-        group: "Rule sections",
+        group: "Markdown sections",
         title: entry.text,
         subtitle: entry.path,
         badge: `H${entry.depth}`,
@@ -356,7 +365,7 @@ export function CommandPalette({
       { name: "Actions", items: actionItems },
       { name: "Files", items: fileItems },
       { name: "JSON keys", items: jsonItems },
-      { name: "Rule sections", items: headingItems },
+      { name: "Markdown sections", items: headingItems },
     ],
     [actionItems, fileItems, jsonItems, headingItems],
   );
@@ -449,7 +458,7 @@ export function CommandPalette({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={handleInputKeyDown}
-            placeholder="Search files, JSON keys, rule headings, or actions..."
+            placeholder="Search files, JSON keys, headings, or actions..."
             className="h-6 flex-1 bg-transparent text-[13px] text-ink placeholder:text-[#5f7188] focus:outline-none"
             role="combobox"
             aria-expanded="true"
@@ -479,7 +488,8 @@ export function CommandPalette({
                 No results for “{query}”.
               </p>
               <p className="mt-1 text-[10.5px] text-[#61748d]">
-                Try a setting name like “fontSize” or a path fragment.
+                Try a setting name like &ldquo;fontSize&rdquo;, a file like
+                &ldquo;AGENTS.md&rdquo;, or a path fragment.
               </p>
               {indexError ? (
                 <p className="mt-2 text-[10.5px] text-del">{indexError}</p>

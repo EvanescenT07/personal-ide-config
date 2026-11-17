@@ -1,0 +1,30 @@
+{
+  "plugins": {
+    "android-cli-plugin": {
+      "enabled": true
+    },
+    "antislop": {
+      "enabled": true
+    },
+    "coderabbit": {
+      "enabled": true
+    },
+    "firebase": {
+      "enabled": true
+    },
+    "google-antigravity-sdk": {
+      "enabled": true
+    }
+  },
+  "userSettings": {
+    "globalPermissionGrants": {
+      "allow": [
+        "command(git status)",
+        "command(git diff)",
+        "command(git log)",
+        "command(Get-ChildItem)",
+        "command(ls)"
+      ]
+    }
+  }
+}

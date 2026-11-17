@@ -1,3 +1,7 @@
+/**
+ * Top-level client workbench coordinating the explorer tree, file viewer,
+ * AI rules composer, commit history timeline, and Ctrl/Cmd+K command palette.
+ */
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -57,6 +61,11 @@ function pickPrimaryFile(tree: RepoTree | null): string | null {
     (file) => file.category === "ideConfigs" && /(^|\/)settings\.json$/i.test(file.path),
   );
 
+  const canonicalSettings = settingsFiles.find((file) => file.path === "ide/settings.json");
+  if (canonicalSettings) {
+    return canonicalSettings.path;
+  }
+
   const meaningfulSettings = settingsFiles
     .filter((file) => file.size > 2)
     .sort((left, right) => right.size - left.size);
@@ -87,8 +96,8 @@ function TreeErrorState({
         </h1>
         <p className="mt-2 text-[12px] leading-5 text-[#d3a8ad]">{message}</p>
         <p className="mt-3 rounded-md border border-edge bg-black/20 px-3 py-2 text-left font-mono text-[10px] leading-5 text-[#8fa4c2]">
-          Configure a read-only GITHUB_TOKEN in .env.local to raise the GitHub API
-          limit from 60 to 5,000 requests per hour.
+          Configure a read-only GITHUB_TOKEN in .env or .env.local to raise the
+          GitHub API limit from 60 to 5,000 requests per hour.
         </p>
         <button
           type="button"
@@ -117,6 +126,7 @@ const MOBILE_VIEWS: Array<{
   { view: "history", label: "History", Icon: GitBranch },
 ];
 
+/** Interactive shell rendering the activity bar, explorer sidebar, active pane, and modals. */
 export function Workbench({
   initialTree,
   initialError,
@@ -439,7 +449,7 @@ export function Workbench({
               <div className="flex min-w-0 flex-1 items-center gap-1.5">
                 <Braces className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden="true" />
                 <span className="truncate text-[12px] font-medium text-ink">
-                  {tree?.repo ?? "vscode-config"}
+                  {tree?.repo ?? "IDE Config Hub"}
                 </span>
               </div>
 

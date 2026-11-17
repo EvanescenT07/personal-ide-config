@@ -1,3 +1,7 @@
+/**
+ * Server-side Shiki syntax highlighter with a bounded in-memory HTML cache
+ * to avoid shipping highlighter bundles to the browser.
+ */
 import "server-only";
 
 import { createHash } from "node:crypto";
@@ -12,6 +16,8 @@ const SUPPORTED_LANGUAGES = [
   "javascript",
   "yaml",
   "toml",
+  "lua",
+  "viml",
   "shellscript",
   "powershell",
   "bat",
@@ -55,6 +61,7 @@ function remember(key: string, html: string): string {
   return html;
 }
 
+/** Highlights code server-side with Shiki, falling back to escaped preformatted HTML for oversized blobs. */
 export async function highlightCode(code: string, language: string): Promise<string> {
   const cacheKey = createHash("sha1")
     .update(language)

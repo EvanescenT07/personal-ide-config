@@ -1,0 +1,40 @@
+# Universal cross-IDE formatting baseline.
+# Applies across VS Code-family editors, JetBrains IDEs, Neovim, and Zed.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{ts,tsx,js,jsx,mjs,cjs,json,jsonc,yaml,yml,css,scss,html,svg,prisma,dart}]
+indent_size = 2
+
+[*.py]
+indent_size = 4
+
+[*.go]
+indent_style = tab
+indent_size = 4
+
+[*.{sh,bash,zsh}]
+indent_size = 2
+end_of_line = lf
+
+[*.{ps1,psm1,psd1}]
+indent_size = 4
+
+[*.{bat,cmd}]
+indent_size = 2
+end_of_line = crlf
+
+[*.{md,mdx,mdc}]
+indent_size = 2
+trim_trailing_whitespace = false
+
+[Makefile]
+indent_style = tab

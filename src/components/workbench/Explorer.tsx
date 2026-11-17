@@ -1,3 +1,7 @@
+/**
+ * Sidebar tree view grouping repository files by category with folder collapse state
+ * and prompt-combiner selection toggles for Markdown/text AI rules.
+ */
 "use client";
 
 import { useMemo, useState } from "react";
@@ -45,7 +49,7 @@ const SECTION_META: Record<
   { label: string; Icon: typeof Settings2; accent: string }
 > = {
   ideConfigs: { label: "IDE Configs", Icon: Settings2, accent: "text-[#f0c674]" },
-  aiRules: { label: "AI Agent Rules", Icon: Sparkles, accent: "text-[#c9a5ff]" },
+  aiRules: { label: "AI Agents & Rules", Icon: Sparkles, accent: "text-[#c9a5ff]" },
   scripts: { label: "Scripts & Automation", Icon: Terminal, accent: "text-[#7ee0b0]" },
   docs: { label: "Documentation", Icon: BookOpen, accent: "text-[#7fb4ff]" },
 };
@@ -108,7 +112,7 @@ function FileRow({
       )}
       style={{ paddingLeft: 10 + depth * 12 }}
     >
-      {file.category === "aiRules" ? (
+      {file.isAiRule ? (
         <button
           type="button"
           onClick={(event) => {
@@ -225,6 +229,7 @@ function FolderRows({
   );
 }
 
+/** Renders categorized collapsible folder trees with inline filtering and refresh trigger. */
 export function Explorer({
   files,
   selectedPath,
@@ -405,8 +410,8 @@ export function Explorer({
 
       <div className="border-t border-edge px-3 py-2.5">
         <p className="text-[10px] leading-4 text-[#61748d]">
-          Auto-detected from the Git tree. New configs and rules appear after a
-          refresh.
+          Auto-detected from the Git tree. New IDE configs, agent rules, and scripts
+          appear after a refresh.
         </p>
       </div>
     </aside>

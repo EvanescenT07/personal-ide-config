@@ -1,3 +1,8 @@
+/**
+ * Formatting helpers for byte sizes, relative/UTC timestamps, compact counts, and token previews.
+ */
+
+/** Formats a byte count into human-readable IEC units. */
 export function formatBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) {
     return "0 B";
@@ -10,6 +15,7 @@ export function formatBytes(bytes: number): string {
   return `${value >= 10 || exponent === 0 ? Math.round(value) : value.toFixed(1)} ${units[exponent]}`;
 }
 
+/** Formats an ISO timestamp as a relative time phrase using Intl.RelativeTimeFormat. */
 export function relativeTime(isoDate: string): string {
   const timestamp = new Date(isoDate).getTime();
 
@@ -40,6 +46,7 @@ export function relativeTime(isoDate: string): string {
   return formatter.format(Math.round(deltaSeconds / 31_536_000), "year");
 }
 
+/** Formats an ISO date string as a UTC timestamp for hover tooltips. */
 export function exactUtc(isoDate: string): string {
   const date = new Date(isoDate);
   if (Number.isNaN(date.getTime())) {
@@ -48,14 +55,17 @@ export function exactUtc(isoDate: string): string {
   return `${date.toISOString().replace("T", " ").slice(0, 19)} UTC`;
 }
 
+/** Formats numbers using compact notation (e.g. `1.4K`) for token badges. */
 export function formatNumber(value: number): string {
   return new Intl.NumberFormat("en", { notation: "compact" }).format(value);
 }
 
+/** Estimates approximate token count from UTF-8 byte length. */
 export function estimateTokensFromBytes(bytes: number): number {
   return Math.max(1, Math.ceil(bytes / 4));
 }
 
+/** Truncates single-line previews to fit UI rows cleanly. */
 export function copyLinePreview(value: string, limit = 90): string {
   return value.length > limit ? `${value.slice(0, limit - 3)}...` : value;
 }

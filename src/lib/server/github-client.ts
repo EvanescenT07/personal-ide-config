@@ -1,3 +1,7 @@
+/**
+ * Server-only GitHub REST API v3 and raw CDN client with ISR caching tags,
+ * rate-limit tracking, and environment-driven repository coordinates.
+ */
 import "server-only";
 
 import { Octokit } from "@octokit/rest";
@@ -6,8 +10,10 @@ import { RequestError } from "@octokit/request-error";
 import type { RateLimitInfo } from "@/lib/types";
 
 const DEFAULT_OWNER = "EvanescenT07";
+// Fallback repository slug; overridden by GITHUB_REPO in .env or .env.local.
 const DEFAULT_REPO = "vscode-config";
 
+/** Wraps upstream GitHub REST or raw CDN failures with an HTTP status code. */
 export class GitHubApiError extends Error {
   readonly status: number;
 
@@ -18,6 +24,7 @@ export class GitHubApiError extends Error {
   }
 }
 
+/** Raised when GITHUB_OWNER or GITHUB_REPO contains invalid path characters. */
 export class RepositoryConfigError extends Error {
   constructor(message: string) {
     super(message);
@@ -104,6 +111,7 @@ let rateLimit: RateLimitInfo = {
   resetAt: null,
 };
 
+/** Returns the most recently observed GitHub API rate-limit headers. */
 export function getRateLimit(): RateLimitInfo {
   return rateLimit;
 }
@@ -125,8 +133,8 @@ function readRateLimit(headers: Record<string, string | number | undefined>): vo
 }
 
 function getCoordinates(): RepoCoordinates {
-  const owner = (process.env.GITHUB_OWNER ?? DEFAULT_OWNER).trim();
-  const repo = (process.env.GITHUB_REPO ?? DEFAULT_REPO).trim();
+  const owner = process.env.GITHUB_OWNER?.trim() || DEFAULT_OWNER;
+  const repo = process.env.GITHUB_REPO?.trim() || DEFAULT_REPO;
 
   if (!/^[A-Za-z0-9_.-]+$/.test(owner) || !/^[A-Za-z0-9_.-]+$/.test(repo)) {
     throw new RepositoryConfigError(
@@ -137,6 +145,7 @@ function getCoordinates(): RepoCoordinates {
   return { owner, repo };
 }
 
+/** Resolves and validates the configured GitHub repository owner and name. */
 export function getRepoCoordinates(): RepoCoordinates {
   return getCoordinates();
 }
@@ -152,7 +161,7 @@ function getOctokit(): Octokit {
 
   octokitInstance = new Octokit({
     auth: token || undefined,
-    userAgent: "vscode-config-hub",
+    userAgent: "ide-config-hub",
   });
 
   return octokitInstance;
@@ -211,6 +220,7 @@ async function request<T>(
   }
 }
 
+/** Resolves the configured default branch or queries GitHub repository metadata. */
 export async function getDefaultBranch(): Promise<string> {
   const configured = process.env.GITHUB_DEFAULT_BRANCH?.trim();
   if (configured) {
@@ -227,6 +237,7 @@ export async function getDefaultBranch(): Promise<string> {
   return data.default_branch;
 }
 
+/** Fetches the full recursive Git tree for the given branch or tree SHA. */
 export async function getRecursiveTree(branch: string): Promise<GitHubTreeResponse> {
   const { owner, repo } = getCoordinates();
 
@@ -237,6 +248,7 @@ export async function getRecursiveTree(branch: string): Promise<GitHubTreeRespon
   );
 }
 
+/** Fetches a paginated commit list, optionally filtered to a single repository path. */
 export async function getCommitPage(
   options: { path?: string; page?: number; perPage?: number },
 ): Promise<GitHubCommitListItem[]> {
@@ -256,6 +268,7 @@ export async function getCommitPage(
   );
 }
 
+/** Fetches full commit statistics and file patches for an immutable commit SHA. */
 export async function getCommitDetails(sha: string): Promise<GitHubCommitDetailResponse> {
   const { owner, repo } = getCoordinates();
 
@@ -266,10 +279,12 @@ export async function getCommitDetails(sha: string): Promise<GitHubCommitDetailR
   );
 }
 
+/** Checks whether a Git ref string matches a 7-40 character hexadecimal commit SHA. */
 export function isCommitSha(value: string): boolean {
   return /^[0-9a-f]{7,40}$/i.test(value);
 }
 
+/** Fetches raw file content from GitHub Raw CDN using immutable caching for commit SHAs. */
 export async function getRawFile(path: string, ref: string): Promise<string> {
   const { owner, repo } = getCoordinates();
   const encodedPath = path.split("/").map(encodeURIComponent).join("/");
@@ -279,7 +294,7 @@ export async function getRawFile(path: string, ref: string): Promise<string> {
   const response = await fetch(
     `https://raw.githubusercontent.com/${owner}/${repo}/${encodedRef}/${encodedPath}`,
     {
-      headers: { "User-Agent": "vscode-config-hub" },
+      headers: { "User-Agent": "ide-config-hub" },
       next: {
         revalidate: immutable ? false : 300,
         tags: ["repo-file", "repo-tree"],

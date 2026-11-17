@@ -4,13 +4,18 @@ import type { RepoFile } from "@/lib/types";
 import { cn } from "@/lib/utils/cn";
 
 interface FileTypeIconProps {
-  file: Pick<RepoFile, "name" | "path" | "category" | "isJson" | "isMarkdown">;
+  file: Pick<RepoFile, "name" | "path" | "category" | "isJson" | "isMarkdown" | "isAiRule">;
   className?: string;
 }
 
+/** Selects a category- and format-aware file icon for explorer rows and headers. */
 export function FileTypeIcon({ file, className }: FileTypeIconProps) {
-  if (file.category === "aiRules") {
+  if (file.isAiRule) {
     return <Bot className={cn("h-3.5 w-3.5 text-[#c9a5ff]", className)} aria-hidden="true" />;
+  }
+
+  if (file.category === "aiRules" && file.isJson) {
+    return <FileJson className={cn("h-3.5 w-3.5 text-[#c9a5ff]", className)} aria-hidden="true" />;
   }
 
   if (file.category === "scripts") {
@@ -27,7 +32,7 @@ export function FileTypeIcon({ file, className }: FileTypeIconProps) {
     return <FileText className={cn("h-3.5 w-3.5 text-[#7fb4ff]", className)} aria-hidden="true" />;
   }
 
-  if (/\.(ts|tsx|js|jsx)$/i.test(file.name)) {
+  if (/\.(ts|tsx|js|jsx|lua|vim)$/i.test(file.name) || /^\.ideavimrc$/i.test(file.name)) {
     return <FileCode2 className={cn("h-3.5 w-3.5 text-[#66b8e8]", className)} aria-hidden="true" />;
   }
 

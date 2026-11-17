@@ -1,3 +1,6 @@
+/**
+ * Browser-side typed fetch helpers for `/api/repo/*` endpoints and multi-rule prompt composition.
+ */
 import type {
   CommitDetail,
   CommitListResponse,
@@ -7,6 +10,7 @@ import type {
   SearchIndex,
 } from "@/lib/types";
 
+/** Client error carrying the HTTP status returned by a Next.js API route handler. */
 export class ApiError extends Error {
   readonly status: number;
 
@@ -46,15 +50,18 @@ async function requestJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   return data as T;
 }
 
+/** Fetches the classified repository tree snapshot. */
 export function fetchTree(signal?: AbortSignal): Promise<RepoTree> {
   return requestJson<RepoTree>("/api/repo/tree", signal);
 }
 
+/** Fetches parsed file content, Shiki HTML, JSONC entries, and metadata for one path. */
 export function fetchFile(path: string, signal?: AbortSignal): Promise<FilePayload> {
   const params = new URLSearchParams({ path });
   return requestJson<FilePayload>(`/api/repo/file?${params.toString()}`, signal);
 }
 
+/** Fetches unhighlighted raw file text at the default branch or a historical commit SHA. */
 export function fetchRawFile(path: string, ref?: string): Promise<RawFilePayload> {
   const params = new URLSearchParams({ path, raw: "1" });
   if (ref) {
@@ -63,6 +70,7 @@ export function fetchRawFile(path: string, ref?: string): Promise<RawFilePayload
   return requestJson<RawFilePayload>(`/api/repo/file?${params.toString()}`);
 }
 
+/** Fetches paginated repository commit summaries, optionally filtered to a single file path. */
 export function fetchCommits(options: {
   path?: string;
   page?: number;
@@ -82,14 +90,17 @@ export function fetchCommits(options: {
   );
 }
 
+/** Fetches parsed unified diff details for a specific commit SHA. */
 export function fetchCommit(sha: string, signal?: AbortSignal): Promise<CommitDetail> {
   return requestJson<CommitDetail>(`/api/repo/commits/${sha}`, signal);
 }
 
+/** Fetches the pre-indexed JSON keys, Markdown headings, and token estimates for search. */
 export function fetchSearchIndex(signal?: AbortSignal): Promise<SearchIndex> {
   return requestJson<SearchIndex>("/api/repo/index", signal);
 }
 
+/** Fetches selected AI rule files in parallel and concatenates them with HTML source markers. */
 export async function buildCombinedPrompt(paths: string[]): Promise<string> {
   const contents = await Promise.all(paths.map((path) => fetchRawFile(path)));
 
@@ -101,6 +112,7 @@ export async function buildCombinedPrompt(paths: string[]): Promise<string> {
     .trim();
 }
 
+/** Formats API, network, or generic Error values into concise user-facing messages. */
 export function describeApiError(error: unknown): string {
   if (error instanceof ApiError) {
     return error.message;

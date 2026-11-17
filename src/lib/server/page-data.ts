@@ -1,3 +1,7 @@
+/**
+ * Server Component data loaders that convert expected GitHub or configuration errors
+ * into recoverable UI error payloads during initial SSR rendering.
+ */
 import "server-only";
 
 import {
@@ -16,6 +20,7 @@ export interface InitialHistoryData extends InitialTreeData {
   commits: CommitListResponse | null;
 }
 
+/** Loads the repository file tree for the main workbench view without throwing on API throttling. */
 export async function loadInitialTree(): Promise<InitialTreeData> {
   try {
     const tree = await getRepoTree();
@@ -28,6 +33,7 @@ export async function loadInitialTree(): Promise<InitialTreeData> {
   }
 }
 
+/** Loads both the file tree and the first page of commits for the `/history` route. */
 export async function loadInitialHistory(): Promise<InitialHistoryData> {
   const initial = await loadInitialTree();
 

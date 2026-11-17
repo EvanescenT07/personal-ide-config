@@ -1,3 +1,7 @@
+/**
+ * AI Agents & Rules view combining a multi-file Markdown prompt composer
+ * with a clean inspection grid for structured JSON/JSONC agent and MCP configs.
+ */
 "use client";
 
 import { useMemo, useState } from "react";
@@ -28,6 +32,7 @@ interface RulesHubProps {
   loadingRules: boolean;
 }
 
+/** Renders selectable Markdown instruction cards and non-combinable agent/MCP JSON config cards. */
 export function RulesHub({
   files,
   index,
@@ -38,6 +43,15 @@ export function RulesHub({
   loadingRules,
 }: RulesHubProps) {
   const [query, setQuery] = useState("");
+
+  const allPromptFiles = useMemo(
+    () => files.filter((file) => file.isAiRule),
+    [files],
+  );
+  const allConfigFiles = useMemo(
+    () => files.filter((file) => !file.isAiRule),
+    [files],
+  );
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -51,14 +65,23 @@ export function RulesHub({
     );
   }, [files, query]);
 
+  const promptFiles = useMemo(
+    () => filtered.filter((file) => file.isAiRule),
+    [filtered],
+  );
+  const agentConfigFiles = useMemo(
+    () => filtered.filter((file) => !file.isAiRule),
+    [filtered],
+  );
+
   const totalTokens = useMemo(
     () =>
-      files.reduce(
+      allPromptFiles.reduce(
         (total, file) =>
           total + (index?.tokenEstimates[file.path] ?? Math.ceil(file.size / 4)),
         0,
       ),
-    [files, index],
+    [allPromptFiles, index],
   );
 
   const selectedPaths = useMemo(
@@ -86,20 +109,27 @@ export function RulesHub({
         <div className="relative mx-auto w-full max-w-5xl px-4 py-7 sm:px-6 sm:py-9">
           <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9ec5ff]">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            AI Agent Rules Hub
+            AI Agents & Rules Hub
           </div>
           <h1 className="mt-2 max-w-2xl text-balance text-[22px] font-semibold leading-tight tracking-tight text-ink sm:text-[28px]">
-            Compose the exact context your agent needs.
+            Compose agent instructions and inspect MCP configs.
           </h1>
           <p className="mt-2 max-w-xl text-[12.5px] leading-6 text-muted">
-            Select rules across folders, estimate the prompt budget, and copy one
-            concatenated system prompt with source markers preserved.
+            Select Markdown rules and skills across folders to copy a concatenated
+            system prompt, or inspect provider and MCP configuration files.
           </p>
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-edge bg-canvas/80 px-2.5 py-1 text-[10.5px] text-muted">
-              <span className="font-mono text-ink">{files.length}</span> rule files
+              <span className="font-mono text-ink">{allPromptFiles.length}</span> prompt
+              rule{allPromptFiles.length === 1 ? "" : "s"}
             </span>
+            {allConfigFiles.length > 0 ? (
+              <span className="rounded-full border border-edge bg-canvas/80 px-2.5 py-1 text-[10.5px] text-muted">
+                <span className="font-mono text-ink">{allConfigFiles.length}</span> agent
+                config{allConfigFiles.length === 1 ? "" : "s"}
+              </span>
+            ) : null}
             <span className="rounded-full border border-edge bg-canvas/80 px-2.5 py-1 text-[10.5px] text-muted">
               <span className="font-mono text-ink">
                 {loadingRules ? "--" : `~${formatNumber(totalTokens)}`}
@@ -122,9 +152,9 @@ export function RulesHub({
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Filter rules by name or path..."
+            placeholder="Filter rules and agent configs by name or path..."
             className="h-9 w-full rounded-md border border-edge bg-canvas/80 pl-9 pr-3 text-[12px] text-ink placeholder:text-[#5f7188] focus:border-accent/50 focus:outline-none"
-            aria-label="Filter AI rules"
+            aria-label="Filter AI rules and agent configs"
           />
         </label>
 
@@ -143,17 +173,21 @@ export function RulesHub({
         {!loadingRules && files.length === 0 ? (
           <div className="rounded-xl border border-dashed border-edge bg-raised/30 px-6 py-14 text-center">
             <Sparkles className="mx-auto h-6 w-6 text-muted" aria-hidden="true" />
-            <p className="mt-3 text-[14px] font-medium text-ink">No AI rule files found</p>
+            <p className="mt-3 text-[14px] font-medium text-ink">
+              No AI agent files found
+            </p>
             <p className="mx-auto mt-1 max-w-sm text-[12px] leading-5 text-muted">
-              Add Markdown rules under a rules, prompts, agents, skills, cursor, or
-              copilot directory and refresh the tree.
+              Add AGENTS.md, Markdown rules, skills, or MCP configs under agent/,
+              rules/, skills/, cursor/, or copilot/ and refresh the tree.
             </p>
           </div>
         ) : null}
 
         {filtered.length === 0 && files.length > 0 ? (
           <div className="rounded-xl border border-dashed border-edge bg-raised/30 px-6 py-12 text-center">
-            <p className="text-[13px] text-muted">No rules match “{query}”.</p>
+            <p className="text-[13px] text-muted">
+              No rules or agent configs match &ldquo;{query}&rdquo;.
+            </p>
             <button
               type="button"
               onClick={() => setQuery("")}
@@ -164,17 +198,135 @@ export function RulesHub({
           </div>
         ) : null}
 
-        {filtered.length > 0 ? (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {filtered.map((file) => {
-              const selected = selectedRulePaths.has(file.path);
-              const tokens =
-                index?.tokenEstimates[file.path] ?? Math.ceil(file.size / 4);
-              const headings = (index?.headings ?? [])
-                .filter((heading) => heading.path === file.path)
-                .slice(0, 3);
+        {promptFiles.length > 0 ? (
+          <section>
+            {agentConfigFiles.length > 0 ? (
+              <h2 className="mb-3 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted">
+                Prompt &amp; Skill Instructions ({promptFiles.length})
+              </h2>
+            ) : null}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {promptFiles.map((file) => {
+                const selected = selectedRulePaths.has(file.path);
+                const tokens =
+                  index?.tokenEstimates[file.path] ?? Math.ceil(file.size / 4);
+                const headings = (index?.headings ?? [])
+                  .filter((heading) => heading.path === file.path)
+                  .slice(0, 3);
 
-              return (
+                return (
+                  <article
+                    key={file.path}
+                    onClick={() => onOpenFile(file.path)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        onOpenFile(file.path);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Open ${file.path}`}
+                    className={cn(
+                      "group flex cursor-pointer flex-col rounded-xl border bg-panel/70 p-4 transition-colors",
+                      selected
+                        ? "border-accent/50 bg-[#0d1726] shadow-[0_0_0_1px_rgba(83,155,255,0.12)]"
+                        : "border-edge hover:border-[#34445a] hover:bg-raised/50",
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onToggleRule(file.path);
+                        }}
+                        className={cn(
+                          "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded transition",
+                          selected ? "text-accent" : "text-muted hover:text-ink",
+                        )}
+                        aria-label={
+                          selected ? `Deselect ${file.name}` : `Select ${file.name}`
+                        }
+                        aria-pressed={selected}
+                      >
+                        {selected ? (
+                          <CheckSquare2 className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <Square className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </button>
+
+                      <div className="flex min-w-0 flex-1 items-start gap-2">
+                        <FileTypeIcon file={file} className="mt-1 h-4 w-4" />
+                        <div className="min-w-0">
+                          <h3 className="truncate text-[13px] font-semibold text-ink">
+                            {file.name}
+                          </h3>
+                          <p className="mt-0.5 truncate font-mono text-[10px] text-[#71859f]">
+                            {file.path}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex shrink-0 items-center gap-1">
+                        <span className="rounded border border-[#4a3a63] bg-[#181123] px-1.5 py-0.5 font-mono text-[9px] text-[#c9a5ff]">
+                          ~{formatNumber(tokens)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex-1">
+                      {headings.length > 0 ? (
+                        <ul className="space-y-1">
+                          {headings.map((heading) => (
+                            <li
+                              key={`${heading.slug}-${heading.depth}`}
+                              className="flex items-center gap-1.5 text-[10.5px] text-[#8195ad]"
+                              style={{ paddingLeft: (heading.depth - 1) * 8 }}
+                            >
+                              <span className="h-1 w-1 shrink-0 rounded-full bg-[#4b5d75]" />
+                              <span className="truncate">{heading.text}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-[10.5px] leading-5 text-[#61748d]">
+                          Markdown instruction file with {formatBytes(file.size)} of
+                          agent guidance.
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-edge/70 pt-3">
+                      <span className="inline-flex items-center gap-1.5 text-[10px] text-muted">
+                        <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
+                        Open rule
+                      </span>
+                      <CopyButton
+                        label="Copy rule"
+                        getText={() =>
+                          fetchRawFile(file.path).then((payload) => payload.raw)
+                        }
+                        toastTitle={`${file.name} copied`}
+                        variant="ghost"
+                        size="xs"
+                      />
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
+
+        {agentConfigFiles.length > 0 ? (
+          <section className={promptFiles.length > 0 ? "mt-7" : undefined}>
+            <h2 className="mb-3 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted">
+              Agent &amp; MCP Configurations ({agentConfigFiles.length})
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {agentConfigFiles.map((file) => (
                 <article
                   key={file.path}
                   onClick={() => onOpenFile(file.path)}
@@ -187,92 +339,50 @@ export function RulesHub({
                   tabIndex={0}
                   role="button"
                   aria-label={`Open ${file.path}`}
-                  className={cn(
-                    "group flex cursor-pointer flex-col rounded-xl border bg-panel/70 p-4 transition-colors",
-                    selected
-                      ? "border-accent/50 bg-[#0d1726] shadow-[0_0_0_1px_rgba(83,155,255,0.12)]"
-                      : "border-edge hover:border-[#34445a] hover:bg-raised/50",
-                  )}
+                  className="group flex cursor-pointer flex-col rounded-xl border border-edge bg-panel/70 p-4 transition-colors hover:border-[#34445a] hover:bg-raised/50"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onToggleRule(file.path);
-                      }}
-                      className={cn(
-                        "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded transition",
-                        selected ? "text-accent" : "text-muted hover:text-ink",
-                      )}
-                      aria-label={selected ? `Deselect ${file.name}` : `Select ${file.name}`}
-                      aria-pressed={selected}
-                    >
-                      {selected ? (
-                        <CheckSquare2 className="h-4 w-4" aria-hidden="true" />
-                      ) : (
-                        <Square className="h-4 w-4" aria-hidden="true" />
-                      )}
-                    </button>
-
                     <div className="flex min-w-0 flex-1 items-start gap-2">
                       <FileTypeIcon file={file} className="mt-1 h-4 w-4" />
                       <div className="min-w-0">
-                        <h2 className="truncate text-[13px] font-semibold text-ink">
+                        <h3 className="truncate text-[13px] font-semibold text-ink">
                           {file.name}
-                        </h2>
+                        </h3>
                         <p className="mt-0.5 truncate font-mono text-[10px] text-[#71859f]">
                           {file.path}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-1">
-                      <span className="rounded border border-[#4a3a63] bg-[#181123] px-1.5 py-0.5 font-mono text-[9px] text-[#c9a5ff]">
-                        ~{formatNumber(tokens)}
-                      </span>
-                    </div>
+                    <span className="shrink-0 rounded border border-edge bg-canvas px-1.5 py-0.5 font-mono text-[9px] uppercase text-[#8fb6ed]">
+                      {file.extension || file.language}
+                    </span>
                   </div>
 
-                  <div className="mt-3 flex-1">
-                    {headings.length > 0 ? (
-                      <ul className="space-y-1">
-                        {headings.map((heading) => (
-                          <li
-                            key={`${heading.slug}-${heading.depth}`}
-                            className="flex items-center gap-1.5 text-[10.5px] text-[#8195ad]"
-                            style={{ paddingLeft: (heading.depth - 1) * 8 }}
-                          >
-                            <span className="h-1 w-1 shrink-0 rounded-full bg-[#4b5d75]" />
-                            <span className="truncate">{heading.text}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-[10.5px] leading-5 text-[#61748d]">
-                        Markdown rule file with {formatBytes(file.size)} of agent
-                        instructions.
-                      </p>
-                    )}
-                  </div>
+                  <p className="mt-3 flex-1 text-[10.5px] leading-5 text-[#61748d]">
+                    Structured agent or MCP configuration ({formatBytes(file.size)}).
+                    Open to search JSON keys or copy strict JSON.
+                  </p>
 
                   <div className="mt-3 flex items-center justify-between gap-2 border-t border-edge/70 pt-3">
                     <span className="inline-flex items-center gap-1.5 text-[10px] text-muted">
                       <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
-                      Open rule
+                      Open config
                     </span>
                     <CopyButton
-                      label="Copy rule"
-                      getText={() => fetchRawFile(file.path).then((payload) => payload.raw)}
+                      label="Copy config"
+                      getText={() =>
+                        fetchRawFile(file.path).then((payload) => payload.raw)
+                      }
                       toastTitle={`${file.name} copied`}
                       variant="ghost"
                       size="xs"
                     />
                   </div>
                 </article>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          </section>
         ) : null}
       </div>
 
@@ -285,7 +395,8 @@ export function RulesHub({
               </div>
               <div className="min-w-0">
                 <p className="text-[12px] font-semibold text-ink">
-                  {selectedPaths.length} rule{selectedPaths.length === 1 ? "" : "s"} selected
+                  {selectedPaths.length} rule{selectedPaths.length === 1 ? "" : "s"}{" "}
+                  selected
                   <span className="ml-2 font-mono text-[10.5px] font-normal text-[#8fb6ed]">
                     ~{formatNumber(selectedTokens)} tokens
                   </span>

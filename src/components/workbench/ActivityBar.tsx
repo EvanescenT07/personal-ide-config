@@ -1,3 +1,7 @@
+/**
+ * Leftmost vertical navigation rail switching between Explorer, AI Agents & Rules,
+ * Source Control history, Command Palette, and the upstream GitHub repository.
+ */
 "use client";
 
 import { Braces, Files, GitBranch, Search, Sparkles } from "lucide-react";
@@ -21,10 +25,11 @@ const ITEMS: Array<{
   Icon: typeof Files;
 }> = [
   { view: "explorer", label: "Explorer", Icon: Files },
-  { view: "rules", label: "AI Agent Rules", Icon: Sparkles },
+  { view: "rules", label: "AI Agents & Rules", Icon: Sparkles },
   { view: "history", label: "Source Control", Icon: GitBranch },
 ];
 
+/** Desktop activity bar rail matching IDE workbench navigation ergonomics. */
 export function ActivityBar({
   activeView,
   onSelectView,

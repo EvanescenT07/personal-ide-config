@@ -1,3 +1,7 @@
+/**
+ * Clipboard copy utility using navigator.clipboard with an off-screen textarea fallback
+ * for non-HTTPS local origins.
+ */
 export async function copyText(value: string): Promise<boolean> {
   if (!value) {
     return false;

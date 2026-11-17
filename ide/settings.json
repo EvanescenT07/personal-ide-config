@@ -1,0 +1,62 @@
+// Global VS Code-family user settings (JSONC).
+// Compatible with VS Code, Antigravity IDE, Cursor, Windsurf, and VSCodium.
+//
+// Adaptation note:
+// VS Code user settings do not expand ${env:...} inside extension SDK/token keys.
+// Deploy via `scripts/deploy-configs.ps1 -ResolvePaths` or adapt with the
+// `agent/skills/ide-config-adapter` skill so local paths and tokens are resolved
+// on your machine without committing secrets to git.
+{
+  "workbench.colorCustomizations": {},
+  "workbench.iconTheme": "material-icon-theme",
+  "workbench.colorTheme": "Dark Modern",
+
+  // Replace ${env:SOURCERY_TOKEN} with your personal Sourcery token after deploying.
+  "sourcery.token": "${env:SOURCERY_TOKEN}",
+
+  "files.autoSave": "afterDelay",
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.unicodeHighlight.invisibleCharacters": false,
+  "diffEditor.renderSideBySide": false,
+
+  "explorer.confirmDelete": false,
+  "explorer.confirmPasteNative": false,
+  "git.openRepositoryInParentFolders": "always",
+
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "[typescriptreact]": {},
+
+  "python.languageServer": "Default",
+  "python.analysis.typeCheckingMode": "standard",
+
+  // Replace ${env:FLUTTER_ROOT} and ${env:JAVA_HOME} with your local SDK paths.
+  "dart.flutterSdkPath": "${env:FLUTTER_ROOT}",
+  "java.jdt.ls.java.home": "${env:JAVA_HOME}",
+  "jdk.telemetry.enabled": true,
+
+  "css.lint.unknownAtRules": "ignore",
+  "css.lint.unknownProperties": "ignore",
+  "svg.preview.mode": "img",
+  "[svg]": {
+    "editor.defaultFormatter": "jock.svg"
+  },
+  "[prisma]": {
+    "editor.defaultFormatter": "ajmnz.prisma-import"
+  },
+
+  "docker.extension.dockerEngineAvailabilityPrompt": false,
+
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": false,
+    "markdown": false,
+    "scminput": false,
+    "python": true,
+    "prisma": false,
+    "typescriptreact": true
+  },
+  "github.copilot.nextEditSuggestions.enabled": true
+}

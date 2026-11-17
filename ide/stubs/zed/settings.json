@@ -1,0 +1,91 @@
+// Zed editor user settings (JSONC).
+// Deploy to ~/.config/zed/settings.json (macOS/Linux) or %APPDATA%\Zed\settings.json (Windows).
+{
+  "theme": {
+    "mode": "dark",
+    "light": "One Light",
+    "dark": "One Dark"
+  },
+  "autosave": {
+    "after_delay": {
+      "milliseconds": 1000
+    }
+  },
+  "format_on_save": "on",
+  "tab_size": 2,
+  "hard_tabs": false,
+  "prettier": {
+    "allowed": true
+  },
+  "diagnostics": {
+    "inline": {
+      "enabled": true
+    }
+  },
+  "git": {
+    "inline_blame": {
+      "enabled": false
+    }
+  },
+  "languages": {
+    "TypeScript": {
+      "tab_size": 2,
+      "formatter": "prettier"
+    },
+    "TSX": {
+      "tab_size": 2,
+      "formatter": "prettier"
+    },
+    "JavaScript": {
+      "tab_size": 2,
+      "formatter": "prettier"
+    },
+    "JSON": {
+      "tab_size": 2,
+      "formatter": "prettier"
+    },
+    "JSONC": {
+      "tab_size": 2,
+      "formatter": "prettier"
+    },
+    "YAML": {
+      "tab_size": 2,
+      "formatter": "prettier"
+    },
+    "Markdown": {
+      "tab_size": 2,
+      "formatter": "prettier"
+    },
+    "Python": {
+      "tab_size": 4,
+      "language_servers": ["pyright", "ruff"]
+    },
+    "Go": {
+      "tab_size": 4,
+      "hard_tabs": true
+    },
+    "Dart": {
+      "tab_size": 2
+    },
+    "Ruby": {
+      "tab_size": 2,
+      "language_servers": ["ruby-lsp"]
+    },
+    "C": {
+      "tab_size": 2
+    },
+    "C++": {
+      "tab_size": 2
+    }
+  },
+  // Ensure `dart`, `gopls`, `clangd`, and `pyright` are available on PATH,
+  // or specify custom binary paths under `"lsp"` locally without committing them.
+  "lsp": {
+    "dart": {
+      "binary": {
+        "path": "dart",
+        "arguments": ["language-server", "--protocol=lsp"]
+      }
+    }
+  }
+}

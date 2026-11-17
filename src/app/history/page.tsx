@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Commit History",
   description:
-    "Inspect the commit timeline, structured diffs, and historical file versions for EvanescenT07/vscode-config.",
+    "Inspect the commit timeline, structured diffs, and historical file versions across IDE configs and AI agent rules.",
 };
 
 export default async function HistoryPage() {

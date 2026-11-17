@@ -1,0 +1,28 @@
+// OpenCode global configuration template.
+// Target path: ~/.config/opencode/opencode.jsonc
+//
+// Cross-platform MCP note for `rea`:
+// - macOS / Linux (and most shells): ["npx", "-y", "rea-agents@6.8.0", "mcp"]
+// - Windows GUI/shim fallback: ["cmd.exe", "/d", "/c", "npx", "-y", "rea-agents@6.8.0", "mcp"]
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "interpreter/sonnet-4.5",
+  "instructions": ["rules.md"],
+  "provider": {},
+  "mcp": {
+    "github": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+      "enabled": true,
+      "environment": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_TOKEN}"
+      }
+    },
+    "rea": {
+      "type": "local",
+      // Wrap with ["cmd.exe", "/d", "/c", "npx", ...] on Windows if direct npx shim fails.
+      "command": ["npx", "-y", "rea-agents@6.8.0", "mcp"],
+      "enabled": true
+    }
+  }
+}
